@@ -1,0 +1,26 @@
+data:
+  source_dir: data/raw
+  processed_dir: data/processed
+  file_name: Titanic
+  id_col: PassengerId
+  target_col: Survived
+
+preprocessing:
+  drop_columns: [Cabin, Name, Ticket]
+  cat_cols: [Sex, Embarked]
+  numeric_cols: [Age, Fare]
+  cat_fill: Embarked
+  numeric_fill: Age
+  test_size: 0.15
+  random_state: 42
+
+model:
+  model_path: models/random_forest_model.pkl
+  preprocessor_path: models/Preprocessor/Titanic_preprocessor.pkl
+  params:
+    n_estimators: 100
+    max_depth: 5
+    random_state: 42
+
+report:
+  report_path: reports/evaluation_report
