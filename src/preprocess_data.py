@@ -7,36 +7,33 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import joblib
 
 
+SOURCE = os.path.join("data", "raw")
+DESTINATION = os.path.join("data", "processed")
+Preprocess = os.path.join("models","Preprocessor")
+
+
 def read_process_data(
-    config,
+    file_name: str,
+    id_col: str,
+    target_col: str,
     logger,
 ) -> None:
     logger.info("Data Processing started")
-
-    file_name = config['data']['file_name']
-    id_col = config['data']['id_col']
-    target_col = config['data']['target_col']
-    source = config['data']['source_dir']
-    drop_cols = config['preprocessing']['drop_columns']
-    cat_cols = config['preprocessing']['cat_cols']
-    numeric_cols = config['preprocessing']['numeric_cols']
-    cat_fill = config['preprocessing']['cat_fill']
-    numeric_fill = config['preprocessing']['numeric_fill']
-    destination = config['data']['processed_dir']
-    preprocessor_path = config['model']['preprocessor_path']
-
-    df = pd.read_csv(os.path.join(source, f"{file_name}.csv"))
+    df = pd.read_csv(os.path.join(SOURCE, f"{file_name}.csv"))
     df.set_index(id_col, inplace=True)
 
-    df.drop(columns = drop_cols,inplace = True)
 
-    df[cat_fill] = df[cat_fill].fillna(df[cat_fill].mode())
+    cat_cols = ['Sex','Embarked']
+    numeric_cols = ['Age','Fare']
+    
+    df.drop(columns = ['Cabin','Name','Ticket'],inplace = True)
 
-    df[numeric_fill].fillna(df[numeric_fill].mean(),inplace = True)
+    df['Embarked'] = df['Embarked'].fillna(df['Embarked'].mode())
+
+    df ['Age']=df['Age'].fillna(df['Age'].mean())
 
     train_df, test_df = train_test_split(
-        df, test_size=config['preprocessing']['test_size'], 
-        random_state=config['preprocessing']['random_state'], stratify=df[target_col]
+        df, test_size=0.15, random_state=42, stratify=df[target_col]
     )
 
     preprocessor = ColumnTransformer(
@@ -51,6 +48,8 @@ def read_process_data(
     df_train_processed = preprocessor.transform(train_df)
     df_test_processed = preprocessor.transform(test_df)
 
+    joblib.dump(preprocessor, os.path.join(Preprocess, f"{file_name}_preprocessor.pkl"))
+
     feature_names = preprocessor.get_feature_names_out()
 
     df_train_processed = pd.DataFrame(df_train_processed, columns=feature_names, index=train_df.index)
@@ -59,8 +58,9 @@ def read_process_data(
     df_train_processed[target_col] = train_df[target_col].values
     df_test_processed[target_col] = test_df[target_col].values
 
-    joblib.dump(preprocessor, preprocessor_path)
-
-
-    df_train_processed.to_parquet(os.path.join(destination, f"{file_name}_train_processed.parquet"))
-    df_test_processed.to_parquet(os.path.join(destination, f"{file_name}_test_processed.parquet"))
+    df_train_processed.to_parquet(
+        os.path.join(DESTINATION, f"{file_name}_train_processed.parquet"), engine="pyarrow"
+    )
+    df_test_processed.to_parquet(
+        os.path.join(DESTINATION, f"{file_name}_test_processed.parquet"), engine="pyarrow"
+    )
