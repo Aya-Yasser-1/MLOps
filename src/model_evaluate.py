@@ -2,17 +2,15 @@ import json
 import os
 import pickle
 import joblib
-
+from omegaconf import DictConfig
 
 from sklearn.metrics import classification_report
 
 
-def evaluate(X_test, y_test, config, logger):
-    model_path = config['model']['model_path']
-    report_path = config['report']['report_path']
+def evaluate(X_test, y_test, cfg: DictConfig, logger):
 
     # Load the trained model
-    model = joblib.load(model_path)
+    model = joblib.load(cfg.pipeline.model.model_path)
     y_pred = model.predict(X_test)
 
     # Generate and print the classification report
@@ -21,8 +19,8 @@ def evaluate(X_test, y_test, config, logger):
     print(classification_report(y_test, y_pred))
 
     # Save report as JSON
-    os.makedirs(os.path.dirname(report_path), exist_ok=True)
-    with open(report_path, "w") as f:
+    os.makedirs(os.path.dirname(cfg.pipeline.report.report_path), exist_ok=True)
+    with open(cfg.pipeline.report.report_path, "w") as f:
         json.dump(report, f, indent=4)
 
-    logger.info(f"Classification report saved to {report_path}")
+    logger.info(f"Classification report saved to {cfg.pipeline.report.report_path}")
