@@ -33,8 +33,8 @@ def read_process_data(
 
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num", StandardScaler(), cfg.pipeline.preprocessing.numeric_cols),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), cfg.pipeline.preprocessing.cat_cols)
+            ("num", StandardScaler(), list(cfg.pipeline.preprocessing.numeric_cols)),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), list(cfg.pipeline.preprocessing.cat_cols))
         ]
     )
 
