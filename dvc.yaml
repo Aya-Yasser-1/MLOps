@@ -1,0 +1,39 @@
+stages:
+  preprocessing:
+    cmd: uv run src/preprocess_data.py
+    deps:
+    - data/raw/Titanic.csv
+    - src/preprocess_data.py
+    params:
+    - data
+    - model
+    - preprocessing
+    outs:
+    - data/processed/Titanic_test_processed.parquet
+    - data/processed/Titanic_train_processed.parquet
+  training:
+    cmd: uv run src/data_training.py
+    deps:
+    - data/processed/Titanic_test_processed.parquet
+    - data/processed/Titanic_train_processed.parquet
+    - src/data_training.py
+    outs:
+    - data/test/X_test.parquet
+    - data/test/y_test.parquet
+    - models/random_forest_model.pkl
+    params:
+    - data
+    - model
+    - preprocessing
+    - test
+  evaluation:
+    cmd: uv run src/model_evaluate.py
+    deps:
+    - data/test/X_test.parquet
+    - data/test/y_test.parquet
+    - models/random_forest_model.pkl
+    - src/model_evaluate.py
+    params:
+    - model
+    - report
+    - test

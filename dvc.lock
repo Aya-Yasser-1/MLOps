@@ -1,0 +1,146 @@
+schema: '2.0'
+stages:
+  preprocessing:
+    cmd: uv run src/preprocess_data.py
+    deps:
+    - path: data/raw/Titanic.csv
+      hash: md5
+      md5: 2309cc5f04782ed9bb6016d9f4e381cf
+      size: 61194
+      isexec: true
+    - path: src/preprocess_data.py
+      hash: md5
+      md5: a7ccaadea813b825ef253b4cf284870b
+      size: 4667
+      isexec: true
+    params:
+      params.yaml:
+        data:
+          source_dir: data/raw
+          processed_dir: data/processed
+          file_name: Titanic
+          id_col: PassengerId
+          target_col: Survived
+        model:
+          model_path: models/random_forest_model.pkl
+          pipeline_path: models/full_pipeline.pkl
+          params:
+            n_estimators: 100
+            max_depth: 5
+            random_state: 42
+        preprocessing:
+          drop_columns:
+          - Cabin
+          - Name
+          - Ticket
+          cat_cols:
+          - Sex
+          - Embarked
+          numeric_cols:
+          - Age
+          - Fare
+          cat_fill: Embarked
+          numeric_fill: Age
+          test_size: 0.15
+          random_state: 42
+    outs:
+    - path: data/processed/Titanic_test_processed.parquet
+      hash: md5
+      md5: 8921ae40c42bcad879dd1164201c328c
+      size: 10486
+    - path: data/processed/Titanic_train_processed.parquet
+      hash: md5
+      md5: 1f6555760e86119e3dabecea02084320
+      size: 17715
+  training:
+    cmd: uv run src/data_training.py
+    deps:
+    - path: data/processed/Titanic_test_processed.parquet
+      hash: md5
+      md5: 8921ae40c42bcad879dd1164201c328c
+      size: 10486
+    - path: data/processed/Titanic_train_processed.parquet
+      hash: md5
+      md5: 1f6555760e86119e3dabecea02084320
+      size: 17715
+    - path: src/data_training.py
+      hash: md5
+      md5: 322ff4bd3644fedaed4b4f15fe7e1773
+      size: 1552
+      isexec: true
+    params:
+      params.yaml:
+        data:
+          source_dir: data/raw
+          processed_dir: data/processed
+          file_name: Titanic
+          id_col: PassengerId
+          target_col: Survived
+        model:
+          model_path: models/random_forest_model.pkl
+          pipeline_path: models/full_pipeline.pkl
+          params:
+            n_estimators: 100
+            max_depth: 5
+            random_state: 42
+        preprocessing:
+          drop_columns:
+          - Cabin
+          - Name
+          - Ticket
+          cat_cols:
+          - Sex
+          - Embarked
+          numeric_cols:
+          - Age
+          - Fare
+          cat_fill: Embarked
+          numeric_fill: Age
+          test_size: 0.15
+          random_state: 42
+        test: data/test
+    outs:
+    - path: data/test/X_test.parquet
+      hash: md5
+      md5: 0002ba5848526e52c2d03619d13d977a
+      size: 9898
+    - path: data/test/y_test.parquet
+      hash: md5
+      md5: e7037de970e93134be1d0909c23d0cf6
+      size: 2814
+    - path: models/random_forest_model.pkl
+      hash: md5
+      md5: 1d76a4ed9c6ec74bb3eb7d72d6c307ef
+      size: 2437641
+  evaluation:
+    cmd: uv run src/model_evaluate.py
+    deps:
+    - path: data/test/X_test.parquet
+      hash: md5
+      md5: 0002ba5848526e52c2d03619d13d977a
+      size: 9898
+    - path: data/test/y_test.parquet
+      hash: md5
+      md5: e7037de970e93134be1d0909c23d0cf6
+      size: 2814
+    - path: models/random_forest_model.pkl
+      hash: md5
+      md5: 1d76a4ed9c6ec74bb3eb7d72d6c307ef
+      size: 2437641
+    - path: src/model_evaluate.py
+      hash: md5
+      md5: 88b80a142f072173eeb829656ffdaab4
+      size: 1245
+      isexec: true
+    params:
+      params.yaml:
+        model:
+          model_path: models/random_forest_model.pkl
+          pipeline_path: models/full_pipeline.pkl
+          params:
+            n_estimators: 100
+            max_depth: 5
+            random_state: 42
+        report:
+          report_path: reports/evaluation_report
+        test: data/test
