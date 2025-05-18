@@ -16,6 +16,9 @@ classifiers = [
     
 ]
 requires-python = "~=3.10.0"
+dependencies = [
+    "litserve>=0.2.10",
+]
 
 
 [tool.ruff]
