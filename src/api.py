@@ -1,11 +1,14 @@
 import numpy as np
 import litserve as ls
 import pickle
+import pandas as pd
+import joblib
 
 class InferenceAPI(ls.LitAPI):
     def setup(self, device = "cpu"):
-        with open("models/full_pipeline.pkl", "rb") as pkl:
-            self._model = pickle.load(pkl)
+        # with open("models/full_pipeline.pkl", "rb") as pkl:
+        #     self._model = pickle.load(pkl)
+        self._model = joblib.load("models/full_pipeline.pkl")
 
     def decode_request(self, request):
         try:
